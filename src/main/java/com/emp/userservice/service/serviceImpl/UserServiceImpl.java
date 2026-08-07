@@ -9,6 +9,7 @@ import com.emp.userservice.exceptions.ResourceNotFoundException;
 import com.emp.userservice.repository.UserRepository;
 import com.emp.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,6 +19,8 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserResponse registerUser(CreateUserRequest request) {
@@ -31,7 +34,7 @@ public class UserServiceImpl implements UserService {
                 .firstName(request.firstName())
                 .lastName(request.lastName())
                 .email(request.email())
-                .password(request.password())
+                .password(passwordEncoder.encode(request.password()))
                 .role(request.role())
                 .build();
 
