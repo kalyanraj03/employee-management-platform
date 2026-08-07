@@ -1,10 +1,10 @@
 package com.emp.userservice.service;
 
 import com.emp.userservice.dto.LoginRequest;
-import com.emp.userservice.dto.LoginResponse;
+import org.springframework.http.ResponseEntity;
 
 public interface AuthService {
 
-    LoginResponse login(LoginRequest request);
+    ResponseEntity<?> login(LoginRequest request);
 
 }

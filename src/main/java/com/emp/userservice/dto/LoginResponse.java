@@ -2,7 +2,9 @@ package com.emp.userservice.dto;
 
 public record LoginResponse(
 
-        String message
+        String accessToken,
+
+        String tokenType
 
 ) {
 }
