@@ -1,18 +1,21 @@
 package com.emp.employeeservice.service.serviceImpl;
 
 import com.emp.employeeservice.client.UserClient;
-import com.emp.employeeservice.dto.CreateEmployeeRequest;
 import com.emp.employeeservice.dto.EmployeeResponse;
 import com.emp.employeeservice.dto.UserResponse;
+import com.emp.employeeservice.dto.CreateEmployeeRequest;
 import com.emp.employeeservice.entity.Employee;
 import com.emp.employeeservice.entity.EmployeeStatus;
 import com.emp.employeeservice.exception.EmployeeAlreadyExistsException;
 import com.emp.employeeservice.exception.EmployeeNotFoundException;
 import com.emp.employeeservice.exception.UserNotFoundException;
+import com.emp.employeeservice.exception.UserServiceUnavailableException;
 import com.emp.employeeservice.repository.EmployeeRepository;
 import com.emp.employeeservice.service.EmployeeService;
+import com.emp.employeeservice.service.UserServiceClient;
 import com.emp.employeeservice.util.EmployeeMapper;
 import feign.FeignException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,19 +27,12 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
-
-    private final UserClient userClient;
+    private final UserServiceClient userServiceClient;
 
     @Override
     public EmployeeResponse createEmployee(CreateEmployeeRequest request) {
 
-        try {
-            userClient.getUserById(request.userId());
-        } catch (FeignException.NotFound ex) {
-            throw new UserNotFoundException(
-                    "User not found with id: " + request.userId()
-            );
-        }
+        userServiceClient.getUser(request.userId());
 
         if (employeeRepository.existsByUserId(request.userId())) {
             throw new EmployeeAlreadyExistsException(
@@ -50,7 +46,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee savedEmployee = employeeRepository.save(employee);
 
-        return employeeMapper.toResponse(savedEmployee);
+        return employeeMapper.toResponse(savedEmployee, new UserResponse(null, null, null, null, null));
     }
 
     @Override
@@ -60,17 +56,19 @@ public class EmployeeServiceImpl implements EmployeeService {
                 .orElseThrow(() -> new EmployeeNotFoundException(
                         "Employee not found with id : " + id));
 
-        return employeeMapper.toResponse(employee);
+        UserResponse user = userServiceClient.getUser(employee.getUserId());
+
+        return employeeMapper.toResponse(employee, user);
     }
 
-    @Override
-    public List<EmployeeResponse> getAllEmployees() {
-
-        return employeeRepository.findAll()
-                .stream()
-                .map(employeeMapper::toResponse)
-                .toList();
-    }
+//    @Override
+//    public List<EmployeeResponse> getAllEmployees() {
+//
+//        return employeeRepository.findAll()
+//                .stream()
+//                .map(employeeMapper::toResponse)
+//                .toList();
+//    }
 
     private String generateEmployeeCode() {
 
@@ -78,4 +76,5 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         return String.format("EMP%04d", count);
     }
+
 }

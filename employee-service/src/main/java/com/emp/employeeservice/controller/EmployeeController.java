@@ -33,9 +33,9 @@ public class EmployeeController {
         return ResponseEntity.ok(employeeService.getEmployeeById(id));
     }
 
-    @GetMapping
-    public ResponseEntity<List<EmployeeResponse>> getAllEmployees() {
-
-        return ResponseEntity.ok(employeeService.getAllEmployees());
-    }
+    //    @GetMapping
+    //    public ResponseEntity<List<EmployeeResponse>> getAllEmployees() {
+    //
+    //        return ResponseEntity.ok(employeeService.getAllEmployees());
+    //    }
 }

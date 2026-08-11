@@ -10,7 +10,9 @@ public record EmployeeResponse(
 
         Long id,
 
-        Long userId,
+        String firstName,
+
+        String lastName,
 
         String employeeCode,
 
@@ -18,12 +20,12 @@ public record EmployeeResponse(
 
         String designation,
 
+        String email,
+
         BigDecimal salary,
 
         LocalDate joiningDate,
 
-        EmployeeStatus status,
-
-        LocalDateTime createdAt
+        EmployeeStatus status
 
 ) {}
