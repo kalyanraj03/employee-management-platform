@@ -11,6 +11,6 @@ public interface EmployeeService {
 
     EmployeeResponse getEmployeeById(Long id);
 
-    List<EmployeeResponse> getAllEmployees();
+   // List<EmployeeResponse> getAllEmployees();
 
 }
