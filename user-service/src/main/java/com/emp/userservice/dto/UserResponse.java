@@ -1,7 +1,5 @@
 package com.emp.userservice.dto;
 
-import com.emp.userservice.entity.Role;
-
 import java.time.LocalDateTime;
 
 public record UserResponse(
@@ -13,8 +11,6 @@ public record UserResponse(
         String lastName,
 
         String email,
-
-        Role role,
 
         LocalDateTime createdAt
 

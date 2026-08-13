@@ -31,12 +31,8 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
-    private String password;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Role role;
+    @Column(name = "keycloak_user_id", nullable = false, unique = true)
+    private String keycloakUserId;
 
     private LocalDateTime createdAt;
 
