@@ -9,19 +9,24 @@ import com.emp.userservice.exceptions.ResourceNotFoundException;
 import com.emp.userservice.repository.UserRepository;
 import com.emp.userservice.service.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
 
-    private final PasswordEncoder passwordEncoder;
+    private final KeycloakUserService keycloakUserService;
 
+    @Transactional
     @Override
     public UserResponse registerUser(CreateUserRequest request) {
 
@@ -30,17 +35,60 @@ public class UserServiceImpl implements UserService {
                     "User already exists with email : " + request.email());
         }
 
-        User user = User.builder()
-                .firstName(request.firstName())
-                .lastName(request.lastName())
-                .email(request.email())
-                .password(passwordEncoder.encode(request.password()))
-                .role(request.role())
-                .build();
+        String keycloakUserId = null;
 
-        User savedUser = userRepository.save(user);
+        try {
 
-        return mapToUserResponse(savedUser);
+            // 1. Create user in Keycloak
+
+            keycloakUserId = keycloakUserService.createUser(
+                    request.email(),
+                    request.email(),
+                    request.firstName(),
+                    request.lastName(),
+                    request.password()
+            );
+
+            // 2. Assign USER role
+
+            keycloakUserService.assignUserRole(keycloakUserId);
+
+            // 3. Save application user in MySQL
+
+            User user = User.builder()
+                    .keycloakUserId(keycloakUserId)
+                    .firstName(request.firstName())
+                    .lastName(request.lastName())
+                    .email(request.email())
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+
+            User savedUser = userRepository.save(user);
+
+            return mapToUserResponse(savedUser);
+        }catch (Exception e) {
+
+            // Compensate Keycloak if DB operation fails
+            if (keycloakUserId != null) {
+
+                try {
+
+                    keycloakUserService.deleteUser(keycloakUserId);
+
+                } catch (Exception rollbackException) {
+
+                    // Don't hide the original exception
+                    log.error(
+                            "Failed to rollback Keycloak user: {}",
+                            keycloakUserId,
+                            rollbackException
+                    );
+                }
+            }
+
+            throw e;
+        }
     }
 
     @Override
@@ -72,7 +120,6 @@ public class UserServiceImpl implements UserService {
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
         user.setEmail(request.email());
-        user.setRole(request.role());
 
         User updatedUser = userRepository.save(user);
 
@@ -96,7 +143,6 @@ public class UserServiceImpl implements UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getEmail(),
-                user.getRole(),
                 user.getCreatedAt()
         );
     }

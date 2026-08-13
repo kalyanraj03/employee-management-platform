@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8082
 
 spring:
   application:
@@ -24,3 +24,9 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka
+
+keycloak:
+  server-url: http://localhost:8080
+  realm: employee-platform
+  client-id: user-service
+  client-secret: ${KEYCLOAK_CLIENT_SECRET}
