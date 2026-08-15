@@ -27,11 +27,18 @@ public class UserController {
                 .body(userService.registerUser(request));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(
-            @PathVariable Long id) {
+//    @GetMapping("/{id}")
+//    public ResponseEntity<UserResponse> getUserById(
+//            @PathVariable Long id) {
+//
+//        return ResponseEntity.ok(userService.getUserById(id));
+//    }
 
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("/{sessId}")
+    public ResponseEntity<UserResponse> getUserById(
+            @PathVariable String sessId) {
+
+        return ResponseEntity.ok(userService.getUserBysessId(sessId));
     }
 
     @GetMapping

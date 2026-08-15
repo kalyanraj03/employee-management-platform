@@ -29,9 +29,10 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeExchange(exchange -> exchange
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .pathMatchers(HttpMethod.POST,"/api/v1/users")
                         .hasRole("ADMIN")
-                        .pathMatchers("api/v1/employees/**").hasAnyRole("USER","ADMIN")
+                        .pathMatchers("/api/v1/employees/**").hasAnyRole("USER","ADMIN")
                         .anyExchange()
                         .authenticated()
                 )

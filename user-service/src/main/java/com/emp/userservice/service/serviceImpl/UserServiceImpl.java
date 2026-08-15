@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -134,6 +135,14 @@ public class UserServiceImpl implements UserService {
                         new ResourceNotFoundException("User not found with id : " + id));
 
         userRepository.delete(user);
+    }
+
+    @Override
+    public UserResponse getUserBysessId(String sessId) {
+
+        Optional<User> updatedUser = userRepository.findByKeycloakUserId(sessId);
+
+        return mapToUserResponse(updatedUser.get());
     }
 
     private UserResponse mapToUserResponse(User user) {

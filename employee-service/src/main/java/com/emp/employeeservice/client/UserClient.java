@@ -11,4 +11,7 @@ public interface UserClient {
     @GetMapping("/api/v1/users/{id}")
     UserResponse getUserById(@PathVariable Long id);
 
+    @GetMapping("/api/v1/users/{sessId}")
+    UserResponse getUserBysessId(@PathVariable String sessId);
+
 }

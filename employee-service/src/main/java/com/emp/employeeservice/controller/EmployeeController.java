@@ -38,4 +38,14 @@ public class EmployeeController {
     //
     //        return ResponseEntity.ok(employeeService.getAllEmployees());
     //    }
+
+    @GetMapping("/me")
+    public ResponseEntity<EmployeeResponse> getMyProfile(
+            @RequestHeader("X-User-Keycloak-Id") String keycloakUserId) {
+
+        return ResponseEntity.ok(
+                employeeService.getMyProfile(keycloakUserId)
+        );
+    }
+
 }

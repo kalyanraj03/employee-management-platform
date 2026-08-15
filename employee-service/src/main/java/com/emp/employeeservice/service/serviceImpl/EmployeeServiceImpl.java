@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +29,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
     private final UserServiceClient userServiceClient;
+    
+    private final UserClient userClient;
 
     @Override
     public EmployeeResponse createEmployee(CreateEmployeeRequest request) {
@@ -57,6 +60,16 @@ public class EmployeeServiceImpl implements EmployeeService {
                         "Employee not found with id : " + id));
 
         UserResponse user = userServiceClient.getUser(employee.getUserId());
+
+        return employeeMapper.toResponse(employee, user);
+    }
+
+    @Override
+    public EmployeeResponse getMyProfile(String keycloakUserId) {
+
+        UserResponse user = userClient.getUserBysessId(keycloakUserId);
+
+        Employee employee = employeeRepository.findByUserId(user.id()).get();
 
         return employeeMapper.toResponse(employee, user);
     }
