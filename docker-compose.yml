@@ -1,0 +1,138 @@
+services:
+
+  mysql:
+    image: mysql:8.4
+    container_name: employee-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: user_service_db
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    networks:
+      - employee-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+
+  discovery-server:
+    build:
+      context: ./discovery-server
+    container_name: discovery-server
+    ports:
+      - "8761:8761"
+    networks:
+      - employee-network
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/eureka/apps"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6
+    container_name: keycloak
+    command:
+      - start-dev
+      - --http-port=8080
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_DB: mysql
+      KC_DB_URL: jdbc:mysql://employee-mysql:3306/keycloak_db
+      KC_DB_USERNAME: root
+      KC_DB_PASSWORD: root
+    ports:
+      - "8080:8080"
+    networks:
+      - employee-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+
+  user-service:
+    build:
+      context: ./user-service
+    container_name: user-service
+    ports:
+      - "8082:8082"
+
+    environment:
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+      discovery-server:
+        condition: service_healthy
+
+      keycloak:
+        condition: service_healthy
+
+    networks:
+      - employee-network
+
+  employee-service:
+    build:
+      context: ./employee-service
+    container_name: employee-service
+    ports:
+      - "8081:8081"
+
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+      discovery-server:
+        condition: service_healthy
+
+      user-service:
+        condition: service_started
+
+    networks:
+      - employee-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8085:8085"
+
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+
+      keycloak:
+        condition: service_healthy
+
+      user-service:
+        condition: service_started
+
+      employee-service:
+        condition: service_started
+
+    networks:
+      - employee-network
+
+volumes:
+  mysql-data:
+
+
+networks:
+  employee-network:
+    driver: bridge
