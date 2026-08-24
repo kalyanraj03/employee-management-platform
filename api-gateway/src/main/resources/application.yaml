@@ -46,7 +46,7 @@ spring:
     oauth2:
       resourceserver:
         jwt:
-          issuer-uri: http://localhost:8080/realms/employee-platform
+          issuer-uri: http://43.205.126.4:8080/realms/employee-platform
           jwk-set-uri: http://keycloak:8080/realms/employee-platform/protocol/openid-connect/certs
 
 eureka:
