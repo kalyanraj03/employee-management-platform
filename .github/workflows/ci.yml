@@ -1,0 +1,41 @@
+name: Java CI
+
+on:
+  push:
+    branches:
+      - develop
+
+  pull_request:
+    branches:
+      - develop
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Build API Gateway
+        working-directory: api-gateway
+        run: mvn clean package
+
+      - name: Build Discovery Server
+        working-directory: discovery-server
+        run: mvn clean package
+
+      - name: Build User Service
+        working-directory: user-service
+        run: mvn clean package
+
+      - name: Build Employee Service
+        working-directory: employee-service
+        run: mvn clean package
